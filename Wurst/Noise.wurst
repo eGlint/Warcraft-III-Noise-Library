@@ -1,0 +1,83 @@
+/*
+    Perlin Noise Wurst v1.0.1
+
+    Port by Glint
+    Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
+*/
+package Noise
+
+import NoWurst
+import Integer
+import Vectors
+
+function grad(int hash, real x) returns real
+    var h = hash.bitAnd(15)
+    return h.bitAnd(1) == 0 ? x : -x
+    
+function grad(int hash, vec2 vec) returns real
+    var h = hash.bitAnd(15)
+    let u = h < 8 ? vec.x : vec.y
+    let v = h < 4 ? vec.y : vec.x
+    return (h.bitAnd(1) == 0 ? u: -u) + (h.bitAnd(2) == 0 ? v : -v)
+
+function grad(int hash, vec3 vec) returns real
+    let h = hash.bitAnd(15)
+    let u = h < 8 ? vec.x : vec.y
+    let v = h < 4 ? vec.y : (h == 12 or h == 14 ? vec.x : vec.z)
+    return (h.bitAnd(1) == 0 ? u : -u) + (h.bitAnd(2) == 0 ? v : -v)
+
+function real.fade () returns real
+    return this * this * this * (this * (this * 6. - 15.) + 10.)
+
+public class Noise 
+    static int array p
+
+    static function perlin (real x) returns real 
+        var lx = x 
+        let X = lx.floor().bitAnd(255)
+        lx -= lx.floor()
+        return grad(p[X], lx).lerp(
+               grad(p[X + 1], lx - 1), lx.fade()) * 2
+
+    static function perlin (vec2 vec) returns real
+        var lvec = vec
+        let X = lvec.x.floor().bitAnd(255)
+        let Y = lvec.y.floor().bitAnd(255)      
+        lvec = vec2(lvec.x - lvec.x.floor(), lvec.y - lvec.y.floor())
+        let u = lvec.x.fade()
+        let v = lvec.y.fade()
+        let A = p[X] + Y
+        let B = p[X + 1] + Y
+        return grad(p[A], lvec).lerp(
+               grad(p[B], lvec - vec2(1, 0)), u).lerp(
+               grad(p[A + 1], lvec - vec2(0, 1)).lerp(
+               grad(p[B + 1], lvec - vec2(1, 1)), u), v)      
+
+    static function perlin (vec3 vec) returns real
+        var lvec = vec
+        let X = vec.x.floor().bitAnd(255)
+        let Y = vec.y.floor().bitAnd(255)
+        let Z = vec.z.floor().bitAnd(255)        
+        lvec = vec3(lvec.x - lvec.x.floor(), lvec.y - lvec.y.floor(), lvec.z - lvec.z.floor())
+        let u = lvec.x.fade()
+        let v = lvec.y.fade()
+        let w = lvec.z.fade()
+        let A = p[X] + Y
+        let AA = p[A] + Z
+        let AB = p[A + 1] + Z
+        let B = p[X + 1] + Y
+        let BA = p[B] + Z
+        let BB = p[B + 1] + Z
+        return grad(p[AA], lvec).lerp(
+               grad(p[BA], lvec - vec3(1, 0, 0)), u).lerp(
+               grad(p[AB], lvec - vec3(0, 1, 0)).lerp(
+               grad(p[BB], lvec - vec3(1, 1, 0)), u), v).lerp(
+               grad(p[AA + 1], lvec - vec3(0, 0, 1)).lerp(
+               grad(p[BA + 1], lvec - vec3(1, 0, 1)), u).lerp(
+               grad(p[AB + 1], lvec - vec3(0, 1, 1)).lerp(
+               grad(p[BB + 1], lvec - vec3(1, 1, 1)), u), v), w)
+
+    static function generateRandomPermutation()
+        for i = 0 to 255
+            p[i] = GetRandomInt(0, 255)
+            p[i + 256] = p [i]
