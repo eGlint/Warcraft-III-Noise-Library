@@ -8,6 +8,6 @@ If you are not familiar with adding octaves to Perlin Noise, [Flafla2's Octave P
 
 ## Changelogs
 
-- [JASS 1.0.0](JASS/CHANGELOG.md)
-- [vJASS 1.0.0](vJASS/CHANGELOG.md)
-- [Lua 1.0.1](Lua/CHANGELOG.md)
+- [JASS 1.0.0](JASS/changelog.md)
+- [vJASS 1.0.0](vJASS/changelog.md)
+- [Lua 1.0.1](Lua/changelog.md)
