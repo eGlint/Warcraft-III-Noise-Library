@@ -1,21 +1,26 @@
 /*
-	Perlin Noise vJASS 1.0.0
+	Noise vJASS 1.1.0
 
 	Port by Glint
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
+	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 */
-
 library Noise
-	
+
 	private module Init
-        private static method onInit takes nothing returns nothing
+        	private static method onInit takes nothing returns nothing
 			call permutationInit()
-        endmethod
-    endmodule
+			call openSimplexInit()
+        	endmethod
+	endmodule
 
 	struct Noise extends array
-		readonly static string version = "1.0.0"
+		readonly static string version = "1.1.0"
+		readonly static real STRETCH_CONSTANT_2D = -0.21132486 
+		readonly static real SQUISH_CONSTANT_2D = 0.36602540
+		readonly static integer NORM_CONSTANT_2D = 47
 		static integer array permutation
+		static integer array gradTable2D
 
 		implement Init
 		implement optional OctavePerlin
@@ -41,7 +46,7 @@ library Noise
 		endmethod
 
 		private static method lerp takes real t, real a, real b returns real
-			return a + t * (b -a)
+			return a + t * (b - a)
 		endmethod
 
 		private static method grad1D takes integer hash, real x returns real
@@ -123,6 +128,128 @@ library Noise
 			set lerpB1 = lerp(u, grad3D(permutation[AA + 1], x, y, z - 1.), grad3D(permutation[BA + 1], x - 1., y, z - 1.))
 			set lerpB2 = lerp(u, grad3D(permutation[AB + 1], x, y - 1., z - 1.), grad3D(permutation[BB + 1], x - 1., y - 1., z - 1.))
 			return lerp(w, lerp(v, lerpA1, lerpA2), lerp(v, lerpB1, lerpB2))
+		endmethod
+
+		private static method extrapolate2D takes integer xsb, integer ysb, real dx, real dy returns real 
+			local integer index = BlzBitAnd(permutation[BlzBitAnd(permutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 15) 
+			return gradTable2D[index] * dx + gradTable2D[index + 1] * dy
+		endmethod 
+
+		static method openSimplex2D takes real x, real y returns real 
+			local real strechOffset = (x + y) * STRETCH_CONSTANT_2D
+			local real xs = x + strechOffset
+			local real ys = y + strechOffset
+			local integer xsb = floor(xs)
+			local integer ysb = floor(ys)
+			local real squishOffset = (xsb + ysb) * SQUISH_CONSTANT_2D
+			local real xb = xsb + squishOffset
+			local real yb = ysb + squishOffset
+			local real xins = xs - xsb 
+			local real yins = ys - ysb
+			local real inSum = xins + yins
+			local real dx0 = x - xb
+			local real dy0 = y - yb
+			local real dx_ext
+			local real dy_ext
+			local integer xsv_ext
+			local integer ysv_ext
+			local real value = 0
+			local real dx1 = dx0 - 1. - SQUISH_CONSTANT_2D
+			local real dy1 = dy0 - SQUISH_CONSTANT_2D
+			local real attn1 = 2. - dx1 * dx1 - dy1 * dy1
+			local real dx2 = dx0 - SQUISH_CONSTANT_2D
+			local real dy2 = dy0 - 1 - SQUISH_CONSTANT_2D
+			local real attn2 = 2. - dx2 * dx2 - dy2 * dy2
+			local real zins
+			local real attn0 
+			local real attn_ext
+			if attn1 > 0 then
+				set attn1 = attn1 * attn1
+				set value = attn1 * attn1 * extrapolate2D(xsb + 1, ysb, dx1, dy1)
+			endif
+			if attn2 > 0 then 
+				set attn2 = attn2 * attn2
+				set value = value + attn2 * attn2 * extrapolate2D(xsb, ysb + 1, dx2, dy2)
+			endif
+			if inSum <= 1 then 
+				set zins = 1. - inSum
+				if zins > xins or zins > yins then 
+					if xins > yins then
+						set xsv_ext = xsb + 1
+						set ysv_ext = ysb - 1
+						set dx_ext = dx0 - 1.
+						set dy_ext = dy0 + 1.
+					else
+						set xsv_ext = xsb - 1
+						set ysv_ext = ysb + 1
+						set dx_ext = dx0 + 1.
+						set dy_ext = dy0 - 1.
+					endif
+				else 
+					set xsv_ext = xsb + 1
+					set ysv_ext = ysb + 1
+					set dx_ext = dx0 - 1 - 2 * SQUISH_CONSTANT_2D
+					set dy_ext = dy0 - 1 - 2 * SQUISH_CONSTANT_2D
+				endif
+			else 
+				set zins = 2. - inSum
+				if zins < xins or zins < yins then 
+					if xins > yins then 
+						set xsv_ext = xsb + 2
+						set ysv_ext = ysb
+						set dx_ext = dx0 - 2 - 2 * SQUISH_CONSTANT_2D
+						set dy_ext = dy0 - 2 * SQUISH_CONSTANT_2D
+					else 
+						set xsv_ext = xsb
+						set ysv_ext = ysb + 2
+						set dx_ext = dx0 - 2 * SQUISH_CONSTANT_2D
+						set dy_ext = dy0 - 2 - 2 * SQUISH_CONSTANT_2D
+					endif
+				else
+					set dx_ext = dx0 
+					set dy_ext = dy0
+					set xsv_ext = xsb 
+					set ysv_ext = ysb
+				endif
+				set xsb = xsb + 1
+				set ysb = ysb + 1
+				set dx0 = dx0 - 1 - 2 * SQUISH_CONSTANT_2D
+				set dy0 = dy0 - 1 - 2 * SQUISH_CONSTANT_2D
+			endif
+			set attn0 = 2 - dx0 * dx0 - dy0 * dy0
+			if attn0 > 0 then 
+				set attn0 = attn0 * attn0
+				set value = value + attn0 * attn0 * extrapolate2D(xsb, ysb, dx0, dy0)
+			endif
+			set attn_ext = 2 - dx_ext * dx_ext - dy_ext * dy_ext
+			if attn_ext > 0 then 
+				set attn_ext = attn_ext * attn_ext
+				set value = value + attn_ext * attn_ext * extrapolate2D(xsv_ext, ysv_ext, dx_ext, dy_ext)
+			endif
+			return value / NORM_CONSTANT_2D
+		endmethod
+
+		private static method setGradientTable2D takes nothing returns nothing 
+			set gradTable2D[0] = 5
+			set gradTable2D[1] = 2
+			set gradTable2D[2] = 2
+			set gradTable2D[3] = 5
+			set gradTable2D[4] = -5
+			set gradTable2D[5] = 2
+			set gradTable2D[6] = -2
+			set gradTable2D[7] = 5
+			set gradTable2D[8] = 5
+			set gradTable2D[9] = -2
+			set gradTable2D[10] = 2
+			set gradTable2D[11] = -5
+			set gradTable2D[12] = -5
+			set gradTable2D[13] = -2
+			set gradTable2D[14] = -2
+			set gradTable2D[15] = -5
+		endmethod
+
+		static method openSimplexInit takes nothing returns nothing 
+			call setGradientTable2D()
 		endmethod
 
 		static method permutationInit takes nothing returns nothing 

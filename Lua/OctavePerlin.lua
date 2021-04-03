@@ -1,5 +1,5 @@
 --[[
-	Octave Perlin Lua v1.0.0 
+	Octave Perlin Lua v1.1.0 
 
 	A plugin for the Noise library.
 

@@ -1,8 +1,13 @@
 //
-//	Perlin Noise JASS v1.0.0
+//	Noise JASS v1.1.0
 //
 //	Port by Glint
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
+//	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
+//
+// 	REQUIRES THE FOLLOWING GLOBAL VARIABLES:
+// 	NoisePermutation (integer array)
+// 	GradientTable2D  (integer array)
 //
 
 function Floor takes real value returns integer
@@ -26,7 +31,7 @@ function Fade takes real t returns real
 endfunction
 
 function Lerp takes real t, real a, real b returns real
-	return a + t * (b -a)
+	return a + t * (b - a)
 endfunction
 
 function Gradient1D takes integer hash, real x returns real
@@ -108,4 +113,134 @@ function PerlinNoise3D takes real x, real y, real z returns real
 	set lerpB1 = Lerp(u, Gradient3D(udg_NoisePermutation[AA + 1], x, y, z - 1.), Gradient3D(udg_NoisePermutation[BA + 1], x - 1., y, z - 1.))
 	set lerpB2 = Lerp(u, Gradient3D(udg_NoisePermutation[AB + 1], x, y - 1., z - 1.), Gradient3D(udg_NoisePermutation[BB + 1], x - 1., y - 1., z - 1.))
 	return Lerp(w, Lerp(v, lerpA1, lerpA2), Lerp(v, lerpB1, lerpB2))
+endfunction
+
+function InitGradientTable2D takes nothing returns nothing 
+	set udg_GradientTable2D[0] = 5
+	set udg_GradientTable2D[1] = 2
+	set udg_GradientTable2D[2] = 2
+	set udg_GradientTable2D[3] = 5
+	set udg_GradientTable2D[4] = -5
+	set udg_GradientTable2D[5] = 2
+	set udg_GradientTable2D[6] = -2
+	set udg_GradientTable2D[7] = 5
+	set udg_GradientTable2D[8] = 5
+	set udg_GradientTable2D[9] = -2
+	set udg_GradientTable2D[10] = 2
+	set udg_GradientTable2D[11] = -5
+	set udg_GradientTable2D[12] = -5
+	set udg_GradientTable2D[13] = -2
+	set udg_GradientTable2D[14] = -2
+	set udg_GradientTable2D[15] = -5
+endfunction
+
+constant function StretchConstant2D takes nothing returns real 
+	return -0.21132486
+endfunction
+
+constant function SquishConstant2D takes nothing returns real 
+	return 0.36602540
+endfunction 
+
+constant function NormConstant2D takes nothing returns integer 
+	return 47
+endfunction
+
+function Extrapolate2D takes integer xsb, integer ysb, real dx, real dy returns real 
+	local integer index = BlzBitAnd(udg_NoisePermutation[BlzBitAnd(udg_NoisePermutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 15) 
+	return udg_GradientTable2D[index] * dx + udg_GradientTable2D[index + 1] * dy
+endfunction
+
+function OpenSimplex2D takes real x, real y returns real 
+	local real strechOffset = (x + y) * StretchConstant2D()
+	local real xs = x + strechOffset
+	local real ys = y + strechOffset
+	local integer xsb = Floor(xs)
+	local integer ysb = Floor(ys)
+	local real squishOffset = (xsb + ysb) * SquishConstant2D()
+	local real xb = xsb + squishOffset
+	local real yb = ysb + squishOffset
+	local real xins = xs - xsb 
+	local real yins = ys - ysb
+	local real inSum = xins + yins
+	local real dx0 = x - xb
+	local real dy0 = y - yb
+	local real dx_ext
+	local real dy_ext
+	local integer xsv_ext
+	local integer ysv_ext
+	local real value = 0
+	local real dx1 = dx0 - 1. - SquishConstant2D()
+	local real dy1 = dy0 - SquishConstant2D()
+	local real attn1 = 2. - dx1 * dx1 - dy1 * dy1
+	local real dx2 = dx0 - SquishConstant2D()
+	local real dy2 = dy0 - 1 - SquishConstant2D()
+	local real attn2 = 2. - dx2 * dx2 - dy2 * dy2
+	local real zins
+	local real attn0 
+	local real attn_ext
+	if attn1 > 0 then
+		set attn1 = attn1 * attn1
+		set value = attn1 * attn1 * Extrapolate2D(xsb + 1, ysb, dx1, dy1)
+	endif
+	if attn2 > 0 then 
+		set attn2 = attn2 * attn2
+		set value = value + attn2 * attn2 * Extrapolate2D(xsb, ysb + 1, dx2, dy2)
+	endif
+	if inSum <= 1 then 
+		set zins = 1. - inSum
+		if zins > xins or zins > yins then 
+			if xins > yins then
+				set xsv_ext = xsb + 1
+				set ysv_ext = ysb - 1
+				set dx_ext = dx0 - 1.
+				set dy_ext = dy0 + 1.
+			else
+				set xsv_ext = xsb - 1
+				set ysv_ext = ysb + 1
+				set dx_ext = dx0 + 1.
+				set dy_ext = dy0 - 1.
+			endif
+		else 
+			set xsv_ext = xsb + 1
+			set ysv_ext = ysb + 1
+			set dx_ext = dx0 - 1 - 2 * SquishConstant2D()
+			set dy_ext = dy0 - 1 - 2 * SquishConstant2D()
+		endif
+	else 
+		set zins = 2. - inSum
+		if zins < xins or zins < yins then 
+			if xins > yins then 
+				set xsv_ext = xsb + 2
+				set ysv_ext = ysb
+				set dx_ext = dx0 - 2 - 2 * SquishConstant2D()
+				set dy_ext = dy0 - 2 * SquishConstant2D()
+			else 
+				set xsv_ext = xsb
+				set ysv_ext = ysb + 2
+				set dx_ext = dx0 - 2 * SquishConstant2D()
+				set dy_ext = dy0 - 2 - 2 * SquishConstant2D()
+			endif
+		else
+			set dx_ext = dx0 
+			set dy_ext = dy0
+			set xsv_ext = xsb 
+			set ysv_ext = ysb
+		endif
+		set xsb = xsb + 1
+		set ysb = ysb + 1
+		set dx0 = dx0 - 1 - 2 * SquishConstant2D()
+		set dy0 = dy0 - 1 - 2 * SquishConstant2D()
+	endif
+	set attn0 = 2 - dx0 * dx0 - dy0 * dy0
+	if attn0 > 0 then 
+		set attn0 = attn0 * attn0
+		set value = value + attn0 * attn0 * Extrapolate2D(xsb, ysb, dx0, dy0)
+	endif
+	set attn_ext = 2 - dx_ext * dx_ext - dy_ext * dy_ext
+	if attn_ext > 0 then 
+		set attn_ext = attn_ext * attn_ext
+		set value = value + attn_ext * attn_ext * Extrapolate2D(xsv_ext, ysv_ext, dx_ext, dy_ext)
+	endif
+	return value / NormConstant2D()
 endfunction
