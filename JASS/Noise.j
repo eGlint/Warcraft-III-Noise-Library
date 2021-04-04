@@ -1,5 +1,5 @@
 //
-//	Noise JASS v1.1.0-pre-1.29
+//	Noise JASS v1.1.1-pre-1.29
 //
 //	Port by Glint
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
@@ -13,7 +13,7 @@
 //  https://www.hiveworkshop.com/threads/snippet-bitwise.331760/
 //
 
-constant function NoiseBitAnd takes integer x, integer y returns integer
+function NoiseBitAnd takes integer x, integer y returns integer
 	//return AND(x, y) // Bitwise by d07.RiV
 	call BJDebugMsg("NoiseBitAnd: Not implemented") 
 	return 0
