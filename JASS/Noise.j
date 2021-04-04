@@ -1,5 +1,5 @@
 //
-//	Noise JASS v1.1.0
+//	Noise JASS v1.1.0-pre-1.29
 //
 //	Port by Glint
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
@@ -9,6 +9,15 @@
 // 	NoisePermutation (integer array)
 // 	GradientTable2D  (integer array)
 //
+//  Requires Bitwise by d07.RiV, to make this library work properly
+//  https://www.hiveworkshop.com/threads/snippet-bitwise.331760/
+//
+
+constant function NoiseBitAnd takes integer x, integer y returns integer
+	//return AND(x, y) // Bitwise by d07.RiV
+	call BJDebugMsg("NoiseBitAnd: Not implemented") 
+	return 0
+endfunction 
 
 function Floor takes real value returns integer
 	local integer n = R2I(value)
@@ -35,26 +44,26 @@ function Lerp takes real t, real a, real b returns real
 endfunction
 
 function Gradient1D takes integer hash, real x returns real
-	local integer h = BlzBitAnd(hash, 15)
-	return RealTernaryOp(BlzBitAnd(h, 1) == 0, x, -x)
+	local integer h = NoiseBitAnd(hash, 15)
+	return RealTernaryOp(NoiseBitAnd(h, 1) == 0, x, -x)
 endfunction
 
 function PerlinNoise1D takes real x returns real
-	local integer X = BlzBitAnd(Floor(x), 255)
+	local integer X = NoiseBitAnd(Floor(x), 255)
 	set x = x - Floor(x)
 	return Lerp(Fade(x), Gradient1D(udg_NoisePermutation[X], x), Gradient1D(udg_NoisePermutation[X + 1], x - 1)) * 2
 endfunction
 
 function Gradient2D takes integer hash, real x, real y returns real
-	local integer h = BlzBitAnd(hash, 15)
+	local integer h = NoiseBitAnd(hash, 15)
 	local real u = RealTernaryOp(h < 8, x, y)
 	local real v = RealTernaryOp(h < 4, y, x)
-	return RealTernaryOp(BlzBitAnd(h, 1) == 0, u, -u) + RealTernaryOp(BlzBitAnd(h, 2) == 0, v, -v)
+	return RealTernaryOp(NoiseBitAnd(h, 1) == 0, u, -u) + RealTernaryOp(NoiseBitAnd(h, 2) == 0, v, -v)
 endfunction
 
 function PerlinNoise2D takes real x, real y returns real
-	local integer X = BlzBitAnd(Floor(x), 255)
-	local integer Y = BlzBitAnd(Floor(y), 255)
+	local integer X = NoiseBitAnd(Floor(x), 255)
+	local integer Y = NoiseBitAnd(Floor(y), 255)
 	local real u
 	local real v
 	local integer A
@@ -73,16 +82,16 @@ function PerlinNoise2D takes real x, real y returns real
 endfunction
 
 function Gradient3D takes integer hash, real x, real y, real z returns real
-	local integer h = BlzBitAnd(hash, 15)
+	local integer h = NoiseBitAnd(hash, 15)
 	local real u = RealTernaryOp(h < 8, x, y)
 	local real v = RealTernaryOp(h < 4, y, RealTernaryOp(h == 12 or h == 14, x, z))
-	return RealTernaryOp(BlzBitAnd(h, 1) == 0, u, -u) + RealTernaryOp(BlzBitAnd(h, 2) == 0, v, -v)
+	return RealTernaryOp(NoiseBitAnd(h, 1) == 0, u, -u) + RealTernaryOp(NoiseBitAnd(h, 2) == 0, v, -v)
 endfunction
 
 function PerlinNoise3D takes real x, real y, real z returns real
-	local integer X = BlzBitAnd(Floor(x), 255)
-	local integer Y = BlzBitAnd(Floor(y), 255)
-	local integer Z = BlzBitAnd(Floor(z), 255)
+	local integer X = NoiseBitAnd(Floor(x), 255)
+	local integer Y = NoiseBitAnd(Floor(y), 255)
+	local integer Z = NoiseBitAnd(Floor(z), 255)
 	local real u
 	local real v
 	local real w
@@ -147,7 +156,7 @@ constant function NormConstant2D takes nothing returns integer
 endfunction
 
 function Extrapolate2D takes integer xsb, integer ysb, real dx, real dy returns real 
-	local integer index = BlzBitAnd(udg_NoisePermutation[BlzBitAnd(udg_NoisePermutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 15) 
+	local integer index = NoiseBitAnd(udg_NoisePermutation[NoiseBitAnd(udg_NoisePermutation[NoiseBitAnd(xsb, 255)] + ysb, 255)], 15) 
 	return udg_GradientTable2D[index] * dx + udg_GradientTable2D[index + 1] * dy
 endfunction
 

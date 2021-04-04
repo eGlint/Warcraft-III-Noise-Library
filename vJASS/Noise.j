@@ -1,11 +1,15 @@
 /*
-	Noise vJASS 1.1.0
+	Noise vJASS 1.1.0-pre-1.29
 
 	Port by Glint
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
 	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
+
+	Requires Bitwise v1.0.0.1 by Nestharus, Magtheridon96 & Bannar, to make this library work properly
+	https://www.hiveworkshop.com/threads/snippet-bitwise.249223/
+
 */
-library Noise
+library Noise requires optional Bitwise
 
 	private module Init
         	private static method onInit takes nothing returns nothing
@@ -24,6 +28,15 @@ library Noise
 
 		implement Init
 		implement optional OctavePerlin
+
+		private static method bitAnd takes integer x, integer y returns integer
+			static if LIBRARY_Bitwise then 
+				return Bitwise.AND(x, y)
+			else 
+				call BJDebugMsg("Noise.bitAnd: Not implemented") 
+				return 0
+			endif
+		endmethod 
 	
 		private static method floor takes real value returns integer
 			local integer n = R2I(value)
@@ -50,26 +63,26 @@ library Noise
 		endmethod
 
 		private static method grad1D takes integer hash, real x returns real
-			local integer h = BlzBitAnd(hash, 15)
-			return realTernaryOp(BlzBitAnd(h, 1) == 0, x, -x)
+			local integer h = bitAnd(hash, 15)
+			return realTernaryOp(bitAnd(h, 1) == 0, x, -x)
 		endmethod
 
 		static method perlin1D takes real x returns real
-			local integer X = BlzBitAnd(floor(x), 255)
+			local integer X = bitAnd(floor(x), 255)
 			set x = x - floor(x)
 			return lerp(fade(x), grad1D(permutation[X], x), grad1D(permutation[X + 1], x - 1.)) * 2
 		endmethod
 
 		private static method grad2D takes integer hash, real x, real y returns real
-			local integer h = BlzBitAnd(hash, 15)
+			local integer h = bitAnd(hash, 15)
 			local real u = realTernaryOp(h < 8, x, y)
 			local real v = realTernaryOp(h < 4, y, x)
-			return realTernaryOp(BlzBitAnd(h, 1) == 0, u, -u) + realTernaryOp(BlzBitAnd(h, 2) == 0, v, -v)
+			return realTernaryOp(bitAnd(h, 1) == 0, u, -u) + realTernaryOp(bitAnd(h, 2) == 0, v, -v)
 		endmethod
 
 		static method perlin2D takes real x, real y returns real
-			local integer X = BlzBitAnd(floor(x), 255)
-			local integer Y = BlzBitAnd(floor(y), 255)
+			local integer X = bitAnd(floor(x), 255)
+			local integer Y = bitAnd(floor(y), 255)
 			local real u
 			local real v
 			local integer A
@@ -88,16 +101,16 @@ library Noise
 		endmethod
 
 		private static method grad3D takes integer hash, real x, real y, real z returns real
-			local integer h = BlzBitAnd(hash, 15)
+			local integer h = bitAnd(hash, 15)
 			local real u = realTernaryOp(h < 8, x, y)
 			local real v = realTernaryOp(h < 4, y, realTernaryOp(h == 12 or h == 14, x, z))
-			return realTernaryOp(BlzBitAnd(h, 1) == 0, u, -u) + realTernaryOp(BlzBitAnd(h, 2) == 0, v, -v)
+			return realTernaryOp(bitAnd(h, 1) == 0, u, -u) + realTernaryOp(bitAnd(h, 2) == 0, v, -v)
 		endmethod
 
 		static method perlin3D takes real x, real y, real z returns real
-			local integer X = BlzBitAnd(floor(x), 255)
-			local integer Y = BlzBitAnd(floor(y), 255)
-			local integer Z = BlzBitAnd(floor(z), 255)
+			local integer X = bitAnd(floor(x), 255)
+			local integer Y = bitAnd(floor(y), 255)
+			local integer Z = bitAnd(floor(z), 255)
 			local real u
 			local real v
 			local real w
@@ -131,7 +144,7 @@ library Noise
 		endmethod
 
 		private static method extrapolate2D takes integer xsb, integer ysb, real dx, real dy returns real 
-			local integer index = BlzBitAnd(permutation[BlzBitAnd(permutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 15) 
+			local integer index = bitAnd(permutation[bitAnd(permutation[bitAnd(xsb, 255)] + ysb, 255)], 15) 
 			return gradTable2D[index] * dx + gradTable2D[index + 1] * dy
 		endmethod 
 
