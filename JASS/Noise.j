@@ -1,17 +1,25 @@
 //
-//	Noise JASS v1.1.1-pre-1.29
+//	Noise JASS v1.2.0-pre-1.29
 //
 //	Port by Glint
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
 //	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 //
 // 	REQUIRES THE FOLLOWING GLOBAL VARIABLES:
-// 	NoisePermutation (integer array)
-// 	GradientTable2D  (integer array)
+//	NoisePermutation (integer array)
+//	GradientTable2D  (integer array)
+//	NoiseGetRandomIntEvent (real)
+//	NoiseGetRandomIntLow (integer)
+//	NoiseGetRandomIntHigh (integer)
+//	NoiseGetRandomIntReturn (integer)
 //
 //  Requires Bitwise by d07.RiV, to make this library work properly
 //  https://www.hiveworkshop.com/threads/snippet-bitwise.331760/
 //
+
+constant function NoiseVersion takes nothing returns string 
+	return "1.2.0-pre-1.29"
+endfunction
 
 function NoiseBitAnd takes integer x, integer y returns integer
 	//return AND(x, y) // Bitwise by d07.RiV
@@ -122,6 +130,34 @@ function PerlinNoise3D takes real x, real y, real z returns real
 	set lerpB1 = Lerp(u, Gradient3D(udg_NoisePermutation[AA + 1], x, y, z - 1.), Gradient3D(udg_NoisePermutation[BA + 1], x - 1., y, z - 1.))
 	set lerpB2 = Lerp(u, Gradient3D(udg_NoisePermutation[AB + 1], x, y - 1., z - 1.), Gradient3D(udg_NoisePermutation[BB + 1], x - 1., y - 1., z - 1.))
 	return Lerp(w, Lerp(v, lerpA1, lerpA2), Lerp(v, lerpB1, lerpB2))
+endfunction
+
+function GeneratePermutationTableCustom takes code GetRandomIntInterface returns nothing 
+	local integer i = 0
+	local trigger trig = CreateTrigger()
+	call TriggerRegisterVariableEvent(trig, "udg_NoiseGetRandomIntEvent", EQUAL, 1)
+	call TriggerAddAction(trig, GetRandomIntInterface)
+	loop
+		exitwhen i > 255
+		set udg_NoiseGetRandomIntLow = 0  
+		set udg_NoiseGetRandomIntHigh = 255
+		set udg_NoiseGetRandomIntEvent = 1
+		set udg_NoiseGetRandomIntEvent = 0
+		set udg_NoisePermutation[i] = udg_NoiseGetRandomIntReturn
+		set udg_NoisePermutation[i + 256] = udg_NoisePermutation[i]
+		set i = i + 1
+	endloop
+	call DestroyTrigger(trig)
+endfunction
+
+function GeneratePermutationTable takes nothing returns nothing
+	local integer i = 0
+	loop
+		exitwhen i > 255
+		set udg_NoisePermutation[i] = GetRandomInt(0, 255)
+		set udg_NoisePermutation[i + 256] = udg_NoisePermutation[i]
+		set i = i + 1
+	endloop
 endfunction
 
 function InitGradientTable2D takes nothing returns nothing 
@@ -252,4 +288,9 @@ function OpenSimplex2D takes real x, real y returns real
 		set value = value + attn_ext * attn_ext * Extrapolate2D(xsv_ext, ysv_ext, dx_ext, dy_ext)
 	endif
 	return value / NormConstant2D()
+endfunction
+
+function InitNoise takes nothing returns nothing
+	call GeneratePermutationTable()
+	call InitGradientTable2D()
 endfunction

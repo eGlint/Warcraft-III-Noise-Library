@@ -46,6 +46,26 @@ If you want to use your own implementation of Bitwise And for the Noise Library,
 
 Alternatively, you can replace `return 0` to `return ModuloInteger(x, y + 1)`. It might work but it is not recommeded since ModuloInteger and a true implementation of Bitwise And behave differently.
 
+## Setup
+
+Before using the noise functions, make sure to call the folliwng initialization functions:
+
+JASS:
+```
+function MyInitialization takes nothing returns nothing 
+    call InitNoise()
+endfunction
+```
+
+vJASS:<br>
+The library automatically calls `Noise.initialize()` by [default](vJASS/Noise.j#L10-14).
+
+Calling this initialization function will generate random values (uses Warcraft III's GetRandomInt) to the permutation table and set the constant values for the JASS/vJASS versions of the gradient table. 
+
+If you are having any issues with your noise functions during initialization, your permutation and gradient table are possibly uninitialized. 
+
+In case your library that uses the noise functions initializes ahead of the Noise library's initialization, call `InitNoise` (JASS) or `Noise.initialize()` (vJASS) in your initializer.
+
 ## Changelogs
 
 - [JASS 1.1.0-pre-1.29](JASS/changelog.md)
