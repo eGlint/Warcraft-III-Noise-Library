@@ -1,7 +1,7 @@
 /*
-	Noise vJASS 1.2.0-pre-1.29
+	Noise vJASS 1.2.1-pre-1.29
 
-	Port by Glint
+	Port by Glint, https://github.com/eGlint/Warcraft-III-Noise-Library
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
 	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 
@@ -12,19 +12,24 @@
 library Noise requires optional Bitwise
 
 	private module Init
-        	private static method onInit takes nothing returns nothing
+			private static method onInit takes nothing returns nothing
 				call initialize()
-        	endmethod
+			endmethod
 	endmodule
 
 	struct Noise extends array
-		readonly static string version = "1.2.0-pre-1.29"
+		readonly static string version = "1.2.1-pre-1.29"
 		readonly static real STRETCH_CONSTANT_2D = -0.21132486 
 		readonly static real SQUISH_CONSTANT_2D = 0.36602540
 		readonly static integer NORM_CONSTANT_2D = 47
-		static integer array permutation
-		static integer array gradTable2D
+		readonly static integer PMASK = 255
+		readonly static real SQUISH_CONSTANT_2D_X = 2. * SQUISH_CONSTANT_2D 
+		readonly static real SQUISH_CONSTANT_2D_Y = 2. * SQUISH_CONSTANT_2D
 
+		static integer array permutation
+		static integer array gradTable2DX
+		static integer array gradTable2DY
+		
 		implement Init
 		implement optional OctavePerlin
 
@@ -33,6 +38,15 @@ library Noise requires optional Bitwise
 				return Bitwise.AND(x, y)
 			else 
 				call BJDebugMsg("Noise.bitAnd: Not implemented") 
+				return 0
+			endif
+		endmethod
+
+		private static method bitXor takes integer x, integer y returns integer
+			static if LIBRARY_Bitwise then 
+				return Bitwise.XOR(x, y)
+			else 
+				call BJDebugMsg("Noise.bitXor: Not implemented") 
 				return 0
 			endif
 		endmethod 
@@ -143,8 +157,8 @@ library Noise requires optional Bitwise
 		endmethod
 
 		private static method extrapolate2D takes integer xsb, integer ysb, real dx, real dy returns real 
-			local integer index = bitAnd(permutation[bitAnd(permutation[bitAnd(xsb, 255)] + ysb, 255)], 15) 
-			return gradTable2D[index] * dx + gradTable2D[index + 1] * dy
+			local integer index = bitAnd(permutation[bitXor(permutation[bitAnd(xsb, PMASK)], bitAnd(ysb, PMASK))], 7)
+			return gradTable2DX[index] * dx + gradTable2DY[index] * dy
 		endmethod 
 
 		static method openSimplex2D takes real x, real y returns real 
@@ -200,8 +214,8 @@ library Noise requires optional Bitwise
 				else 
 					set xsv_ext = xsb + 1
 					set ysv_ext = ysb + 1
-					set dx_ext = dx0 - 1 - 2 * SQUISH_CONSTANT_2D
-					set dy_ext = dy0 - 1 - 2 * SQUISH_CONSTANT_2D
+					set dx_ext = dx0 - 1 - SQUISH_CONSTANT_2D_X
+					set dy_ext = dy0 - 1 - SQUISH_CONSTANT_2D_Y
 				endif
 			else 
 				set zins = 2. - inSum
@@ -209,13 +223,13 @@ library Noise requires optional Bitwise
 					if xins > yins then 
 						set xsv_ext = xsb + 2
 						set ysv_ext = ysb
-						set dx_ext = dx0 - 2 - 2 * SQUISH_CONSTANT_2D
-						set dy_ext = dy0 - 2 * SQUISH_CONSTANT_2D
+						set dx_ext = dx0 - 2 - SQUISH_CONSTANT_2D_X
+						set dy_ext = dy0 - SQUISH_CONSTANT_2D_Y
 					else 
 						set xsv_ext = xsb
 						set ysv_ext = ysb + 2
-						set dx_ext = dx0 - 2 * SQUISH_CONSTANT_2D
-						set dy_ext = dy0 - 2 - 2 * SQUISH_CONSTANT_2D
+						set dx_ext = dx0 - SQUISH_CONSTANT_2D_X
+						set dy_ext = dy0 - 2 - SQUISH_CONSTANT_2D_Y
 					endif
 				else
 					set dx_ext = dx0 
@@ -225,8 +239,8 @@ library Noise requires optional Bitwise
 				endif
 				set xsb = xsb + 1
 				set ysb = ysb + 1
-				set dx0 = dx0 - 1 - 2 * SQUISH_CONSTANT_2D
-				set dy0 = dy0 - 1 - 2 * SQUISH_CONSTANT_2D
+				set dx0 = dx0 - 1 - SQUISH_CONSTANT_2D_X
+				set dy0 = dy0 - 1 - SQUISH_CONSTANT_2D_Y
 			endif
 			set attn0 = 2 - dx0 * dx0 - dy0 * dy0
 			if attn0 > 0 then 
@@ -241,23 +255,23 @@ library Noise requires optional Bitwise
 			return value / NORM_CONSTANT_2D
 		endmethod
 
-		private static method setGradientTable2D takes nothing returns nothing 
-			set gradTable2D[0] = 5
-			set gradTable2D[1] = 2
-			set gradTable2D[2] = 2
-			set gradTable2D[3] = 5
-			set gradTable2D[4] = -5
-			set gradTable2D[5] = 2
-			set gradTable2D[6] = -2
-			set gradTable2D[7] = 5
-			set gradTable2D[8] = 5
-			set gradTable2D[9] = -2
-			set gradTable2D[10] = 2
-			set gradTable2D[11] = -5
-			set gradTable2D[12] = -5
-			set gradTable2D[13] = -2
-			set gradTable2D[14] = -2
-			set gradTable2D[15] = -5
+		static method setGradientTable2D takes nothing returns nothing 
+			set gradTable2DX[0] = 5
+			set gradTable2DY[0] = 2
+			set gradTable2DX[1] = 2
+			set gradTable2DY[1] = 5
+			set gradTable2DX[2] = -2
+			set gradTable2DY[2] = 5
+			set gradTable2DX[3] = -5
+			set gradTable2DY[3] = 2
+			set gradTable2DX[4] = -5
+			set gradTable2DY[4] = -2
+			set gradTable2DX[5] = -2
+			set gradTable2DY[5] = -5
+			set gradTable2DX[6] = 2
+			set gradTable2DY[6] = -5
+			set gradTable2DX[7] = 5
+			set gradTable2DY[7] = -2
 		endmethod
 
 		// Deprecated as of 1.2.0, use Noise.initialize() instead.

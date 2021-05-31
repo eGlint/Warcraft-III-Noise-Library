@@ -60,6 +60,9 @@ endfunction
 vJASS:<br>
 The library automatically calls `Noise.initialize()` by [default](vJASS/Noise.j#L10-14).
 
+Lua:<br>
+The library automatically calls `Noise.initialize()` by [default](Lua/Noise.lua#L209).
+
 Calling this initialization function will generate random values (uses Warcraft III's GetRandomInt) to the permutation table and set the constant values for the JASS/vJASS versions of the gradient table. 
 
 If you are having any issues with your noise functions during initialization, your permutation and gradient table are possibly uninitialized. 
@@ -68,5 +71,5 @@ In case your library that uses the noise functions initializes ahead of the Nois
 
 ## Changelogs
 
-- [JASS 1.1.0-pre-1.29](JASS/changelog.md)
-- [vJASS 1.1.0-pre-1.29](vJASS/changelog.md)
+- [JASS 1.2.1-pre-1.29](JASS/changelog.md)
+- [vJASS 1.2.1-pre-1.29](vJASS/changelog.md)
