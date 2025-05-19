@@ -274,35 +274,35 @@ library Noise
 			endloop
 		endmethod
 
-		private static real getIntegerIntEvent
-		private static integer p_getIntegerIntLow
-		private static integer p_getIntegerIntHigh
-		private static integer p_getIntegerIntReturn
+		private static real getRandomIntEvent
+		private static integer p_getRandomIntLow
+		private static integer p_getRandomIntHigh
+		private static integer p_getRandomIntReturn
 		
-		static method operator getIntegerIntLow  takes nothing returns integer 
-			return p_getIntegerIntLow 
+		static method operator getRandomIntLow  takes nothing returns integer 
+			return p_getRandomIntLow 
 		endmethod
 
-		static method operator getIntegerIntHigh takes nothing returns integer 
-			return p_getIntegerIntHigh
+		static method operator getRandomIntHigh takes nothing returns integer 
+			return p_getRandomIntHigh
 		endmethod
 
-		static method operator getIntegerIntReturn= takes integer value returns nothing 
-			set p_getIntegerIntReturn = value
+		static method operator getRandomIntReturn= takes integer value returns nothing 
+			set p_getRandomIntReturn = value
 		endmethod
 
 		static method generatePermutationTableCustom takes code GetRandomIntInterface returns nothing 
 			local integer i = 0
 			local trigger trig = CreateTrigger()
-			call TriggerRegisterVariableEvent(trig, "s__Noise_getIntegerIntEvent", EQUAL, 1)
+			call TriggerRegisterVariableEvent(trig, "s__Noise_getRandomIntEvent", EQUAL, 1)
 			call TriggerAddAction(trig, GetRandomIntInterface)
 			loop
 				exitwhen i > 255
-				set p_getIntegerIntLow = 0
-				set p_getIntegerIntHigh = 255
-				set getIntegerIntEvent = 1
-				set getIntegerIntEvent = 0
-				set permutation[i] = p_getIntegerIntReturn 
+				set p_getRandomIntLow = 0
+				set p_getRandomIntHigh = 255
+				set getRandomIntEvent = 1
+				set getRandomIntEvent = 0
+				set permutation[i] = p_getRandomIntReturn 
 				set permutation[i + 256] = permutation[i]
 				set i = i + 1
 			endloop

@@ -32,5 +32,5 @@ In case your library that uses the noise functions initializes ahead of the Nois
 ## Changelogs
 
 - [JASS 1.2.1](JASS/changelog.md)
-- [vJASS 1.2.1](vJASS/changelog.md)
+- [vJASS 1.2.2](vJASS/changelog.md)
 - [Lua 1.2.1](Lua/changelog.md)
