@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - checkout
-      
+
       - run:
           name: Check directory
           command: ls
@@ -19,8 +19,8 @@ jobs:
 
       - run:
           name: Test Noise.j
-          command: pjass common.j blizzard.j noise-pjass-defined-udg.j Noise.j
+          command: pjass /root/common.j /root/blizzard.j noise-pjass-defined-udg.j Noise.j
 
       - run:
           name: Test OctavePerlin
-          command: pjass common.j blizzard.j OctavePerlin.j
+          command: pjass /root/common.j /root/blizzard.j OctavePerlin.j
