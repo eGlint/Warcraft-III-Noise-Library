@@ -1,17 +1,17 @@
 version: 2
 
 jobs:
-  build:
-
+  jass-build:
+  
     docker:
       - image: eglint/pjass
 
     steps:
       - checkout
-      
+
       - run:
           name: Moving JASS files to root directory
-          command: mv JASS/test/*.j . & mv JASS/*.j .
+          command: mv JASS/test/*.j .; mv JASS/*.j .;
 
       - run:
           name: Test
