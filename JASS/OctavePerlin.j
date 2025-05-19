@@ -1,5 +1,5 @@
 //
-//	Octave Perlin JASS v1.0.0 
+//	Octave Perlin JASS v1.1.0 
 //
 //	A plugin for the Noise library.
 //

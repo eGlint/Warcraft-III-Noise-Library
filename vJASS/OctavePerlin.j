@@ -1,5 +1,5 @@
 /*
-	Octave Perlin vJASS v1.0.0 
+	Octave Perlin vJASS v1.1.0 
 
 	A plugin for the Noise library.
 

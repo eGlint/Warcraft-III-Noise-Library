@@ -1,13 +1,14 @@
 --[[
-	Perlin Noise Lua v1.0.1
+	Noise Lua v1.1.0
 
 	Port by Glint
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
+	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 ]]--
 do
 	Noise = {} 
 
-	Noise.version = "1.0.0"
+	Noise.version = "1.1.0"
 	Noise.permutation = {}
 
 	local function floor(value)
@@ -21,7 +22,7 @@ do
 	end
 
 	local function lerp(t, a, b)
-		return a + t * (b -a)
+		return a + t * (b - a)
 	end
 
 	local function grad1D(hash, x)
@@ -80,5 +81,116 @@ do
 			Noise.permutation[i] = GetRandomInt(0, 255)
 			Noise.permutation[i + 256] = Noise.permutation[i]
 		end
+	end
+
+	Noise.STRETCH_CONSTANT_2D = -0.211324865405187
+    	Noise.SQUISH_CONSTANT_2D = 0.366025403784439
+	Noise.NORM_CONSTANT_2D = 47
+	Noise.gradTable2D = 
+	{	
+		[0] = 
+		 5,  2,   2,  5,
+       		-5,  2,  -2,  5,
+        	 5, -2,   2, -5,
+	   	-5, -2,  -2, -5
+	}
+
+	local function extrapolate2D(xsb, ysb, dx, dy) 
+		local index = BlzBitAnd(Noise.permutation[BlzBitAnd(Noise.permutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 14) 
+		return Noise.gradTable2D[index] * dx + Noise.gradTable2D[index + 1] * dy
+	end
+
+	function Noise.openSimplex2D(x, y)
+		local strechOffset = (x + y) * Noise.STRETCH_CONSTANT_2D
+		local xs = x + strechOffset
+		local ys = y + strechOffset
+		local xsb = floor(xs)
+		local ysb = floor(ys)
+		local squishOffset = (xsb + ysb) * Noise.SQUISH_CONSTANT_2D
+		local xb = xsb + squishOffset
+		local yb = ysb + squishOffset
+		local xins = xs - xsb 
+		local yins = ys - ysb
+		local inSum = xins + yins
+		local dx0 = x - xb
+		local dy0 = y - yb
+		local dx_ext
+		local dy_ext
+		local xsv_ext
+		local ysv_ext
+		local value = 0.
+		local dx1 = dx0 - 1. - Noise.SQUISH_CONSTANT_2D
+		local dy1 = dy0 - Noise.SQUISH_CONSTANT_2D
+		local attn1 = 2. - dx1 * dx1 - dy1 * dy1
+		local dx2 = dx0 - Noise.SQUISH_CONSTANT_2D
+		local dy2 = dy0 - 1. - Noise.SQUISH_CONSTANT_2D
+		local attn2 = 2. - dx2 * dx2 - dy2 * dy2
+		local ins
+		local attn0 
+		local attn_ext
+		if attn1 > 0. then
+			attn1 = attn1 * attn1
+			value = attn1 * attn1 * extrapolate2D(xsb + 1, ysb, dx1, dy1)
+		end
+		if attn2 > 0. then 
+			attn2 = attn2 * attn2
+			value = value + attn2 * attn2 * extrapolate2D(xsb, ysb + 1, dx2, dy2)
+		end
+		if inSum <= 1 then 
+			zins = 1. - inSum
+			if zins > xins or zins > yins then 
+				if xins > yins then
+					xsv_ext = xsb + 1
+					ysv_ext = ysb - 1
+					dx_ext = dx0 - 1.
+					dy_ext = dy0 + 1.
+				else
+					xsv_ext = xsb - 1
+					ysv_ext = ysb + 1
+					dx_ext = dx0 + 1.
+					dy_ext = dy0 - 1.
+				end
+			else 
+				xsv_ext = xsb + 1
+				ysv_ext = ysb + 1
+				dx_ext = dx0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
+				dy_ext = dy0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
+			end
+		else 
+			zins = 2. - inSum
+			if zins < xins or zins < yins then 
+				if xins > yins then 
+					xsv_ext = xsb + 2
+					ysv_ext = ysb
+					dx_ext = dx0 - 2. - 2. * Noise.SQUISH_CONSTANT_2D
+					dy_ext = dy0 - 2. * Noise.SQUISH_CONSTANT_2D
+				else 
+					xsv_ext = xsb
+					ysv_ext = ysb + 2
+					dx_ext = dx0 - 2. * Noise.SQUISH_CONSTANT_2D
+					dy_ext = dy0 - 2. - 2. * Noise.SQUISH_CONSTANT_2D
+				end
+			else
+				dx_ext = dx0 
+				dy_ext = dy0
+				xsv_ext = xsb 
+				ysv_ext = ysb
+			end
+			xsb = xsb + 1
+			ysb = ysb + 1
+			dx0 = dx0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
+			dy0 = dy0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
+		end
+		attn0 = 2. - dx0 * dx0 - dy0 * dy0
+		if attn0 > 0. then 
+			attn0 = attn0 * attn0
+			value = value + attn0 * attn0 * extrapolate2D(xsb, ysb, dx0, dy0)
+		end
+		attn_ext = 2. - dx_ext * dx_ext - dy_ext * dy_ext
+		if attn_ext > 0. then 
+			attn_ext = attn_ext * attn_ext
+			value = value + attn_ext * attn_ext * extrapolate2D(xsv_ext, ysv_ext, dx_ext, dy_ext)
+		end
+		return value / Noise.NORM_CONSTANT_2D
 	end
 end
