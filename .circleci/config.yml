@@ -1,7 +1,7 @@
 version: 2
 
 jobs:
-  jass-build:
+  build:
   
     docker:
       - image: eglint/pjass
