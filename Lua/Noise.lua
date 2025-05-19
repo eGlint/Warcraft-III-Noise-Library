@@ -1,14 +1,14 @@
 --[[
-	Noise Lua v1.2.0
+	Noise Lua v1.2.1
 
-	Port by Glint
+	Port by Glint, https://github.com/eGlint/Warcraft-III-Noise-Library
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
 	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 ]]--
 do
 	Noise = {} 
 
-	Noise.version = "1.2.0"
+	Noise.version = "1.2.1"
 	Noise.permutation = {}
 
 	local function floor(value)
@@ -26,24 +26,24 @@ do
 	end
 
 	local function grad1D(hash, x)
-		local h = BlzBitAnd(hash, 15)
-		return (BlzBitAnd(h, 1) == 0 and x or -x) 
+		local h = hash & 15
+		return (h & 1 == 0 and x or -x) 
 	end
 
 	function Noise.perlin1D (x)
-		local X = BlzBitAnd(floor(x), 255)
+		local X = floor(x) & 255
 		x = x - floor(x)
 		return lerp(fade(x), grad1D(Noise.permutation[X], x), grad1D(Noise.permutation[X + 1], x - 1)) * 2
 	end
 
 	local function grad2D(hash, x, y)
-		local h = BlzBitAnd(hash, 15)
+		local h = hash & 15
 		local u, v = h < 8 and x or y, h < 4 and y or x
-		return (BlzBitAnd(h, 1) == 0 and u or -u) + (BlzBitAnd(h, 2) == 0 and v or -v)
+		return (h & 1 == 0 and u or -u) + (h & 2 == 0 and v or -v)
 	end
 
 	function Noise.perlin2D (x, y)
-		local X, Y = BlzBitAnd(floor(x), 255), BlzBitAnd(floor(y), 255)
+		local X, Y = floor(x) & 255, floor(y) & 255
 		x, y = x - floor(x), y - floor(y)
 		local u, v = fade(x), fade(y)
 		local A = Noise.permutation[X] + Y
@@ -54,13 +54,13 @@ do
 	end
 
 	local function grad3D(hash, x, y, z)
-		local h = BlzBitAnd(hash, 15)
+		local h = hash & 15
 		local u, v = h < 8 and x or y, h < 4 and y or ((h == 12 or h == 14) and x or z)
-		return (BlzBitAnd(h, 1) == 0 and u or -u) + (BlzBitAnd(h, 2) == 0 and v or -v)
+		return (h & 1 == 0 and u or -u) + (h & 2 == 0 and v or -v)
 	end
 
 	function Noise.perlin3D (x, y, z)
-		local X, Y, Z = BlzBitAnd(floor(x), 255), BlzBitAnd(floor(y), 255), BlzBitAnd(floor(z), 255)
+		local X, Y, Z = floor(x) & 255, floor(y) & 255, floor(z) & 255
 		x, y, z = x - floor(x), y - floor(y), z - floor(z) 
 		local u, v, w = fade(x), fade(y), fade(z)
 		local A = Noise.permutation[X] + Y
@@ -84,26 +84,28 @@ do
 
 	function Noise.generatePermutationTable(getRandomIntInterface)
 		for i = 0, 255 do
-			Noise.permutation[i] = getRandomIntInterface and getRandomIntInterface(0, 255) or GetRandomInt(0, 255)
+			Noise.permutation[i] = type(getRandomIntInterface) == "function" and getRandomIntInterface(0, 255) or GetRandomInt(0, 255)
 			Noise.permutation[i + 256] = Noise.permutation[i]
 		end
 	end
 
 	Noise.STRETCH_CONSTANT_2D = -0.211324865405187
-    Noise.SQUISH_CONSTANT_2D = 0.366025403784439
+	Noise.SQUISH_CONSTANT_2D = 0.366025403784439
 	Noise.NORM_CONSTANT_2D = 47
+	Noise.PMASK = 255
+	Noise.SQUISH_CONSTANT_2D_X, Noise.SQUISH_CONSTANT_2D_Y = 2. * Noise.SQUISH_CONSTANT_2D, 2. * Noise.SQUISH_CONSTANT_2D
 	Noise.gradTable2D = 
 	{	
 		[0] = 
-		 5,  2,   2,  5,
-       		-5,  2,  -2,  5,
-        	 5, -2,   2, -5,
-	   	-5, -2,  -2, -5
+		{ 5,  2}, { 2,  5},
+		{-2,  5}, {-5,  2},
+		{-5, -2}, {-2, -5},
+		{ 2, -5}, { 5, -2}
 	}
 
-	local function extrapolate2D(xsb, ysb, dx, dy) 
-		local index = BlzBitAnd(Noise.permutation[BlzBitAnd(Noise.permutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 14) 
-		return Noise.gradTable2D[index] * dx + Noise.gradTable2D[index + 1] * dy
+	local function extrapolate2D(xsb, ysb, dx, dy)
+		local index = Noise.permutation[Noise.permutation[xsb & Noise.PMASK] ~ (ysb & Noise.PMASK)] & 7
+		return Noise.gradTable2D[index][1] * dx + Noise.gradTable2D[index][2] * dy
 	end
 
 	function Noise.openSimplex2D(x, y)
@@ -159,8 +161,8 @@ do
 			else 
 				xsv_ext = xsb + 1
 				ysv_ext = ysb + 1
-				dx_ext = dx0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
-				dy_ext = dy0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
+				dx_ext = dx0 - 1. - Noise.SQUISH_CONSTANT_2D_X
+				dy_ext = dy0 - 1. - Noise.SQUISH_CONSTANT_2D_Y
 			end
 		else 
 			zins = 2. - inSum
@@ -168,13 +170,13 @@ do
 				if xins > yins then 
 					xsv_ext = xsb + 2
 					ysv_ext = ysb
-					dx_ext = dx0 - 2. - 2. * Noise.SQUISH_CONSTANT_2D
-					dy_ext = dy0 - 2. * Noise.SQUISH_CONSTANT_2D
+					dx_ext = dx0 - 2. - Noise.SQUISH_CONSTANT_2D_X
+					dy_ext = dy0 - Noise.SQUISH_CONSTANT_2D_Y
 				else 
 					xsv_ext = xsb
 					ysv_ext = ysb + 2
-					dx_ext = dx0 - 2. * Noise.SQUISH_CONSTANT_2D
-					dy_ext = dy0 - 2. - 2. * Noise.SQUISH_CONSTANT_2D
+					dx_ext = dx0 - Noise.SQUISH_CONSTANT_2D_X
+					dy_ext = dy0 - 2. - Noise.SQUISH_CONSTANT_2D_Y
 				end
 			else
 				dx_ext = dx0 
@@ -184,8 +186,8 @@ do
 			end
 			xsb = xsb + 1
 			ysb = ysb + 1
-			dx0 = dx0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
-			dy0 = dy0 - 1. - 2. * Noise.SQUISH_CONSTANT_2D
+			dx0 = dx0 - 1. - Noise.SQUISH_CONSTANT_2D_X
+			dy0 = dy0 - 1. - Noise.SQUISH_CONSTANT_2D_Y
 		end
 		attn0 = 2. - dx0 * dx0 - dy0 * dy0
 		if attn0 > 0. then 

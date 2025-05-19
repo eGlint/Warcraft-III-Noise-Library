@@ -1,13 +1,14 @@
 //
-//	Noise JASS v1.2.0
+//	Noise JASS v1.2.1
 //
-//	Port by Glint
+//	Port by Glint, https://github.com/eGlint/Warcraft-III-Noise-Library
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
 //	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 //
 //	REQUIRES THE FOLLOWING GLOBAL VARIABLES:
 //	NoisePermutation (integer array)
-//	GradientTable2D  (integer array)
+//	GradientTable2DX  (integer array)
+//	GradientTable2DY  (integer array)
 //	NoiseGetRandomIntEvent (real)
 //	NoiseGetRandomIntLow (integer)
 //	NoiseGetRandomIntHigh (integer)
@@ -15,7 +16,7 @@
 //
 
 constant function NoiseVersion takes nothing returns string 
-	return "1.2.0"
+	return "1.2.1"
 endfunction
 
 function Floor takes real value returns integer
@@ -152,22 +153,22 @@ function GeneratePermutationTable takes nothing returns nothing
 endfunction
 
 function InitGradientTable2D takes nothing returns nothing 
-	set udg_GradientTable2D[0] = 5
-	set udg_GradientTable2D[1] = 2
-	set udg_GradientTable2D[2] = 2
-	set udg_GradientTable2D[3] = 5
-	set udg_GradientTable2D[4] = -5
-	set udg_GradientTable2D[5] = 2
-	set udg_GradientTable2D[6] = -2
-	set udg_GradientTable2D[7] = 5
-	set udg_GradientTable2D[8] = 5
-	set udg_GradientTable2D[9] = -2
-	set udg_GradientTable2D[10] = 2
-	set udg_GradientTable2D[11] = -5
-	set udg_GradientTable2D[12] = -5
-	set udg_GradientTable2D[13] = -2
-	set udg_GradientTable2D[14] = -2
-	set udg_GradientTable2D[15] = -5
+	set udg_GradientTable2DX[0] = 5
+	set udg_GradientTable2DY[0] = 2
+	set udg_GradientTable2DX[1] = 2
+	set udg_GradientTable2DY[1] = 5
+	set udg_GradientTable2DX[2] = -2
+	set udg_GradientTable2DY[2] = 5
+	set udg_GradientTable2DX[3] = -5
+	set udg_GradientTable2DY[3] = 2
+	set udg_GradientTable2DX[4] = -5
+	set udg_GradientTable2DY[4] = -2
+	set udg_GradientTable2DX[5] = -2
+	set udg_GradientTable2DY[5] = -5
+	set udg_GradientTable2DX[6] = 2
+	set udg_GradientTable2DY[6] = -5
+	set udg_GradientTable2DX[7] = 5
+	set udg_GradientTable2DY[7] = -2
 endfunction
 
 constant function StretchConstant2D takes nothing returns real 
@@ -182,9 +183,21 @@ constant function NormConstant2D takes nothing returns integer
 	return 47
 endfunction
 
+constant function PMASK takes nothing returns integer 
+	return 255
+endfunction
+
+constant function SquishConstant2DX takes nothing returns real 
+	return 2 * SquishConstant2D()
+endfunction
+
+constant function SquishConstant2DY takes nothing returns real 
+	return 2 * SquishConstant2D()
+endfunction
+
 function Extrapolate2D takes integer xsb, integer ysb, real dx, real dy returns real 
-	local integer index = BlzBitAnd(udg_NoisePermutation[BlzBitAnd(udg_NoisePermutation[BlzBitAnd(xsb, 255)] + ysb, 255)], 15) 
-	return udg_GradientTable2D[index] * dx + udg_GradientTable2D[index + 1] * dy
+	local integer index = BlzBitAnd(udg_NoisePermutation[BlzBitXor(udg_NoisePermutation[BlzBitAnd(xsb, PMASK())], BlzBitAnd(ysb, PMASK()))], 7)
+	return udg_GradientTable2DX[index] * dx + udg_GradientTable2DY[index] * dy
 endfunction
 
 function OpenSimplex2D takes real x, real y returns real 
@@ -240,8 +253,8 @@ function OpenSimplex2D takes real x, real y returns real
 		else 
 			set xsv_ext = xsb + 1
 			set ysv_ext = ysb + 1
-			set dx_ext = dx0 - 1 - 2 * SquishConstant2D()
-			set dy_ext = dy0 - 1 - 2 * SquishConstant2D()
+			set dx_ext = dx0 - 1 - SquishConstant2DX()
+			set dy_ext = dy0 - 1 - SquishConstant2DY()
 		endif
 	else 
 		set zins = 2. - inSum
@@ -249,13 +262,13 @@ function OpenSimplex2D takes real x, real y returns real
 			if xins > yins then 
 				set xsv_ext = xsb + 2
 				set ysv_ext = ysb
-				set dx_ext = dx0 - 2 - 2 * SquishConstant2D()
-				set dy_ext = dy0 - 2 * SquishConstant2D()
+				set dx_ext = dx0 - 2 - SquishConstant2DX()
+				set dy_ext = dy0 - 2 - SquishConstant2DY()
 			else 
 				set xsv_ext = xsb
 				set ysv_ext = ysb + 2
-				set dx_ext = dx0 - 2 * SquishConstant2D()
-				set dy_ext = dy0 - 2 - 2 * SquishConstant2D()
+				set dx_ext = dx0 - SquishConstant2DX()
+				set dy_ext = dy0 - 2 - SquishConstant2DY()
 			endif
 		else
 			set dx_ext = dx0 
@@ -265,8 +278,8 @@ function OpenSimplex2D takes real x, real y returns real
 		endif
 		set xsb = xsb + 1
 		set ysb = ysb + 1
-		set dx0 = dx0 - 1 - 2 * SquishConstant2D()
-		set dy0 = dy0 - 1 - 2 * SquishConstant2D()
+		set dx0 = dx0 - 1 - SquishConstant2DX()
+		set dy0 = dy0 - 1 - SquishConstant2DY()
 	endif
 	set attn0 = 2 - dx0 * dx0 - dy0 * dy0
 	if attn0 > 0 then 

@@ -1,4 +1,10 @@
-# Changelogs for Perlin Noise JASS
+# Changelogs for Noise Library (JASS)
+
+    v1.2.1
+        - Fixed skewed noise for 2D Open Simplex
+        - Turned GradientTable2D into GradientTable2DX and GradientTable2DY for 2D Open Simplex's extrapolation fix, now requires global variables:
+                - GradientTable2DX (integer array)
+                - GradientTable2DY (integer array)
 
     v1.2.0
         - Added InitNoise function, and it is required to be called in initialization
