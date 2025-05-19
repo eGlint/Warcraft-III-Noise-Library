@@ -11,7 +11,7 @@ jobs:
 
       - run:
           name: Moving JASS files to root directory
-          command: mv Warcraft-III-Noise-Library/JASS/test/*.j . & mv Warcraft-III-Noise-Library/JASS/*.j .
+          command: mv JASS/test/*.j . & mv JASS/*.j .
 
       - run:
           name: Test Noise.j
