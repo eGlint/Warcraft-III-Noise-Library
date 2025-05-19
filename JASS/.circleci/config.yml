@@ -1,0 +1,22 @@
+version: 2
+
+jobs:
+  build:
+
+    docker:
+      - image: eglint/pjass
+
+    steps:
+      - checkout
+
+      - run:
+          name: Moving JASS files to root directory
+          command: mv Warcraft-III-Noise-Library/JASS/test/*.j . & mv Warcraft-III-Noise-Library/JASS/*.j .
+
+      - run:
+          name: Test Noise.j
+          command: pjass common.j blizzard.j noise-pjass-defined-udg.j Noise.j
+
+      - run:
+          name: Test OctavePerlin
+          command: pjass common.j blizzard.j OctavePerlin.j
