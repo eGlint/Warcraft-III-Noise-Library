@@ -8,19 +8,11 @@ jobs:
 
     steps:
       - checkout
-
-      - run:
-          name: Check directory
-          command: ls
-
+      
       - run:
           name: Moving JASS files to root directory
           command: mv JASS/test/*.j . & mv JASS/*.j .
 
       - run:
-          name: Test Noise.j
-          command: pjass /root/common.j /root/blizzard.j noise-pjass-defined-udg.j Noise.j
-
-      - run:
-          name: Test OctavePerlin
-          command: pjass /root/common.j /root/blizzard.j OctavePerlin.j
+          name: Test
+          command: pjass /root/common.j /root/blizzard.j noise-pjass-defined-udg.j Noise.j OctavePerlin.j
