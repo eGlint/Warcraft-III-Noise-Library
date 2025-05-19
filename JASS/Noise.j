@@ -1,5 +1,5 @@
 //
-//	Noise JASS v1.2.2
+//	Noise JASS v1.2.1
 //
 //	Port by Glint, https://github.com/eGlint/Warcraft-III-Noise-Library
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
@@ -16,7 +16,7 @@
 //
 
 constant function NoiseVersion takes nothing returns string 
-	return "1.2.2"
+	return "1.2.1"
 endfunction
 
 function Floor takes real value returns integer

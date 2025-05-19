@@ -1,5 +1,5 @@
 /*
-	Noise vJASS 1.2.1
+	Noise vJASS 1.2.2
 
 	Port by Glint, https://github.com/eGlint/Warcraft-III-Noise-Library
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
@@ -14,7 +14,7 @@ library Noise
 	endmodule
 
 	struct Noise extends array
-		readonly static string version = "1.2.1"
+		readonly static string version = "1.2.2"
 		readonly static real STRETCH_CONSTANT_2D = -0.21132486 
 		readonly static real SQUISH_CONSTANT_2D = 0.36602540
 		readonly static integer NORM_CONSTANT_2D = 47
