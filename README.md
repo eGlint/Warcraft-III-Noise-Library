@@ -6,8 +6,31 @@ Visit [this repository](https://github.com/eGlint/wurstNoiselib) for the Wurst v
 
 If you are not familiar with adding octaves to Perlin Noise, [Flafla2's Octave Perlin](https://flafla2.github.io/2014/08/09/perlinnoise.html), is an optional package that can help you.
 
+## Setup
+
+Before using the noise functions, make sure to call the folliwng initialization functions:
+
+JASS:
+```
+function MyInitialization takes nothing returns nothing 
+    call InitNoise()
+endfunction
+```
+
+vJASS:<br>
+The library automatically calls `Noise.initialize()` by [default](vJASS/Noise.j#L10-14).
+
+Lua:<br>
+The library automatically calls `Noise.initialize()` by [default](Lua/Noise.lua#L206).
+
+Calling this initialization function will generate random values (uses Warcraft III's GetRandomInt) to the permutation table and set the constant values for the JASS/vJASS versions of the gradient table. 
+
+If you are having any issues with your noise functions during initialization, your permutation and gradient table are possibly uninitialized. 
+
+In case your library that uses the noise functions initializes ahead of the Noise library's initialization, call `InitNoise` (JASS) or `Noise.initialize()` (vJASS/Lua) in your initializer.
+
 ## Changelogs
 
-- [JASS 1.1.0](JASS/changelog.md)
-- [vJASS 1.1.0](vJASS/changelog.md)
-- [Lua 1.1.0](Lua/changelog.md)
+- [JASS 1.2.0](JASS/changelog.md)
+- [vJASS 1.2.0](vJASS/changelog.md)
+- [Lua 1.2.0](Lua/changelog.md)

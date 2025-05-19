@@ -1,5 +1,5 @@
 --[[
-	Noise Lua v1.1.0
+	Noise Lua v1.2.0
 
 	Port by Glint
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
@@ -8,7 +8,7 @@
 do
 	Noise = {} 
 
-	Noise.version = "1.1.0"
+	Noise.version = "1.2.0"
 	Noise.permutation = {}
 
 	local function floor(value)
@@ -76,15 +76,21 @@ do
 		return lerp(w, lerp(v, a1, a2), lerp(v, b1, b2))
 	end
 
+	-- Deprecated as of 1.2.0, use Noise.generatePermutationTable() instead.
 	function Noise.permutationInit ()
+		print("Noise.permutationInit() is deprecated. Use Noise.generatePermutationTable() instead.")
+		Noise.generatePermutationTable()
+	end
+
+	function Noise.generatePermutationTable(getRandomIntInterface)
 		for i = 0, 255 do
-			Noise.permutation[i] = GetRandomInt(0, 255)
+			Noise.permutation[i] = getRandomIntInterface and getRandomIntInterface(0, 255) or GetRandomInt(0, 255)
 			Noise.permutation[i + 256] = Noise.permutation[i]
 		end
 	end
 
 	Noise.STRETCH_CONSTANT_2D = -0.211324865405187
-    	Noise.SQUISH_CONSTANT_2D = 0.366025403784439
+    Noise.SQUISH_CONSTANT_2D = 0.366025403784439
 	Noise.NORM_CONSTANT_2D = 47
 	Noise.gradTable2D = 
 	{	
@@ -193,4 +199,10 @@ do
 		end
 		return value / Noise.NORM_CONSTANT_2D
 	end
+
+	function Noise.initialize()
+		Noise.generatePermutationTable()
+	end
+
+	Noise.initialize()
 end

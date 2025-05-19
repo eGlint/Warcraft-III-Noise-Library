@@ -1,5 +1,5 @@
 /*
-	Noise vJASS 1.1.0
+	Noise vJASS 1.2.0
 
 	Port by Glint
 	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
@@ -9,19 +9,18 @@ library Noise
 
 	private module Init
         	private static method onInit takes nothing returns nothing
-			call permutationInit()
-			call openSimplexInit()
+				call initialize()
         	endmethod
 	endmodule
 
 	struct Noise extends array
-		readonly static string version = "1.1.0"
+		readonly static string version = "1.2.0"
 		readonly static real STRETCH_CONSTANT_2D = -0.21132486 
 		readonly static real SQUISH_CONSTANT_2D = 0.36602540
 		readonly static integer NORM_CONSTANT_2D = 47
 		static integer array permutation
 		static integer array gradTable2D
-
+		
 		implement Init
 		implement optional OctavePerlin
 	
@@ -229,7 +228,7 @@ library Noise
 			return value / NORM_CONSTANT_2D
 		endmethod
 
-		private static method setGradientTable2D takes nothing returns nothing 
+		static method setGradientTable2D takes nothing returns nothing 
 			set gradTable2D[0] = 5
 			set gradTable2D[1] = 2
 			set gradTable2D[2] = 2
@@ -248,18 +247,66 @@ library Noise
 			set gradTable2D[15] = -5
 		endmethod
 
+		// Deprecated as of 1.2.0, use Noise.initialize() instead.
 		static method openSimplexInit takes nothing returns nothing 
+			call BJDebugMsg("Noise.openSimplexInit(), use Noise.initialize() instead.")
 			call setGradientTable2D()
 		endmethod
 
+		// Deprecated as of 1.2.0, use Noise.initialize() instead.
 		static method permutationInit takes nothing returns nothing 
+			call BJDebugMsg("Noise.permutationInit(), use Noise.initialize() instead.")
+			call generatePermutationTable()
+		endmethod
+
+		static method generatePermutationTable takes nothing returns nothing 
 			local integer i = 0
 			loop
 				exitwhen i > 255
 				set permutation[i] = GetRandomInt(0, 255)
-        			set permutation[i + 256] = permutation[i]
-        			set i = i + 1
+				set permutation[i + 256] = permutation[i]
+				set i = i + 1
 			endloop
-		endmethod 
+		endmethod
+
+		private static real getIntegerIntEvent
+		private static integer p_getIntegerIntLow
+		private static integer p_getIntegerIntHigh
+		private static integer p_getIntegerIntReturn
+		
+		static method operator getIntegerIntLow  takes nothing returns integer 
+			return p_getIntegerIntLow 
+		endmethod
+
+		static method operator getIntegerIntHigh takes nothing returns integer 
+			return p_getIntegerIntHigh
+		endmethod
+
+		static method operator getIntegerIntReturn= takes integer value returns nothing 
+			set p_getIntegerIntReturn = value
+		endmethod
+
+		static method generatePermutationTableCustom takes code GetRandomIntInterface returns nothing 
+			local integer i = 0
+			local trigger trig = CreateTrigger()
+			call TriggerRegisterVariableEvent(trig, "s__Noise_getIntegerIntEvent", EQUAL, 1)
+			call TriggerAddAction(trig, GetRandomIntInterface)
+			loop
+				exitwhen i > 255
+				set p_getIntegerIntLow = 0
+				set p_getIntegerIntHigh = 255
+				set getIntegerIntEvent = 1
+				set getIntegerIntEvent = 0
+				set permutation[i] = p_getIntegerIntReturn 
+				set permutation[i + 256] = permutation[i]
+				set i = i + 1
+			endloop
+			call DestroyTrigger(trig)
+		endmethod
+		
+		static method initialize takes nothing returns nothing
+			call generatePermutationTable()
+			call setGradientTable2D()
+		endmethod
 	endstruct
 endlibrary
