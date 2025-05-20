@@ -7,7 +7,7 @@ jobs:
       - image: eglint/pjass
 
     steps:
-      - checkout
+      - run: git clone -b "$CIRCLE_BRANCH" "$CIRCLE_REPOSITORY_URL"
 
       - run:
           name: Moving JASS files to root directory
