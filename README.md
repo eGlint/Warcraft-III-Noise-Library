@@ -1,4 +1,6 @@
-# Warcraft III (Pre-1.29) Noise Library 
+# Warcraft III (Pre-1.29) Noise Library
+
+[![Build](https://circleci.com/gh/eGlint/Warcraft-III-Noise-Library.svg?&branch=wc3-pre-1.29)](https://circleci.com/gh/eGlint/Warcraft-III-Noise-Library)
 
 This repository contains [Kenneth Perlin's Improved Noise](https://mrl.nyu.edu/~perlin/noise/), [Kurt Spencer's Open Simplex](https://gist.github.com/KdotJPG/b1270127455a94ac5d19), and implemented it to popular Warcraft 3 scripting languages.
 
@@ -6,14 +8,18 @@ If you are not familiar with adding octaves to Perlin Noise, [Flafla2's Octave P
 
 If your map or project aims to run only after 1.29 of Warcraft III, use [this](https://github.com/eGlint/Warcraft-III-Noise-Library) version of Noise Library instead.
 
+## Installation
+
+Most Warcraft III map makers already know the common method of putting a script in a custom map: __copy & paste the code in the Trigger Editor__.
+
 ## Backwards Compatibility Guide
 
-Before adding this library in your map, make sure to follow the instructions below. Not following the instructions will show this message when you run the map and use the Noise functions: 
+Before adding this library in your map, make sure to follow the instructions below. Not following the instructions will show this message when you run the map and use the Noise functions:
 
-JASS: 
+JASS:
 > NoiseBitAnd: Not implemented
 
-vJASS: 
+vJASS:
 > Noise.bitAnd: Not implemented
 
 In order to make Noise Library work in pre-1.29 of Warcraft III, you are required to have these libraries in your map or workspace:
@@ -26,6 +32,7 @@ In order to make Noise Library work in pre-1.29 of Warcraft III, you are require
 Once you added the Bitwise library in your map or workspace, now add the Noise Library.
 
 For JASS, change the statement inside `NoiseBitAnd` from:
+
 ```
 function NoiseBitAnd takes integer x, integer y returns integer
 	//return AND(x, y) // Bitwise by d07.RiV
@@ -33,7 +40,9 @@ function NoiseBitAnd takes integer x, integer y returns integer
 	return 0
 endfunction 
 ```
+
 to:
+
 ```
 function NoiseBitAnd takes integer x, integer y returns integer
 	return AND(x, y) // Bitwise by d07.RiV
@@ -68,6 +77,11 @@ Calling this initialization function will generate random values (uses Warcraft 
 If you are having any issues with your noise functions during initialization, your permutation and gradient table are possibly uninitialized. 
 
 In case your library that uses the noise functions initializes ahead of the Noise library's initialization, call `InitNoise` (JASS) or `Noise.initialize()` (vJASS) in your initializer.
+If you are stumped on how to make this library work, you can download a demo map of the Noise Library in the [Hive Workshop](https://www.hiveworkshop.com/threads/noise-library-v1-2.319413/#Contents:~:Contents&text=Previews-,Contents,-Add%20resource).
+
+## Contributing
+
+Become part of the [contributors](https://github.com/eGlint/Warcraft-III-Noise-Library/graphs/contributors) by doing a [pull request](https://github.com/eGlint/Warcraft-III-Noise-Library/pulls).
 
 ## Changelogs
 
