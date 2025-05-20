@@ -7,7 +7,7 @@ jobs:
       - image: eglint/pjass
 
     steps:
-      - run: git clone -b "$CIRCLE_BRANCH" "$CIRCLE_REPOSITORY_URL"
+      - run: git clone -b "wc3-pre-1.29" "https://github.com/eGlint/Warcraft-III-Noise-Library"
 
       - run:
           name: Moving JASS files to root directory

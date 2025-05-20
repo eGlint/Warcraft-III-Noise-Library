@@ -1,6 +1,6 @@
 # Warcraft III (Pre-1.29) Noise Library
 
-[![Build](https://circleci.com/gh/eGlint/Warcraft-III-Noise-Library.svg?&branch=wc3-pre-1.29)](https://circleci.com/gh/eGlint/Warcraft-III-Noise-Library)
+[![Build](https://circleci.com/gh/eGlint/Warcraft-III-Noise-Library.svg?branch=wc3-pre-1.29)](https://circleci.com/gh/eGlint/Warcraft-III-Noise-Library)
 
 This repository contains [Kenneth Perlin's Improved Noise](https://mrl.nyu.edu/~perlin/noise/), [Kurt Spencer's Open Simplex](https://gist.github.com/KdotJPG/b1270127455a94ac5d19), and implemented it to popular Warcraft 3 scripting languages.
 
