@@ -1,5 +1,8 @@
 # Changelogs for Noise Library (vJASS)
 
+    v1.2.2-pre-1.29
+    - Replaced 'getIntegerInt' names into 'getRandomInt'
+
     v1.2.1-pre-1.29
         - Fixed skewed noise for 2D Open Simplex
         - Turned Noise.gradTable2D into Noise.gradTable2DX and Noise.gradTable2DY for 2D Open Simplex's extrapolation fix

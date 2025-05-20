@@ -5,14 +5,18 @@
 //	Perlin Noise by Kenneth Perlin, https://mrl.nyu.edu/~perlin/noise/
 //	Open Simplex by Kurt Spencer, https://gist.github.com/KdotJPG/b1270127455a94ac5d19
 //
-// 	REQUIRES THE FOLLOWING GLOBAL VARIABLES:
-//	NoisePermutation (integer array)
-//	GradientTable2DX  (integer array)
-//	GradientTable2DY  (integer array)
-//	NoiseGetRandomIntEvent (real)
-//	NoiseGetRandomIntLow (integer)
-//	NoiseGetRandomIntHigh (integer)
-//	NoiseGetRandomIntReturn (integer)
+//	ADDITIONAL INSTALLATION INSTRUCTIONS
+//	In the Trigger Editor, create a new global variable by using: 
+//		'Variables...', the yellow "X" icon or press 'Ctrl + B'.
+//
+//	REQUIRES THE FOLLOWING GLOBAL VARIABLES
+//	integer array 	NoisePermutation 
+//	integer array 	GradientTable2DX  
+//	integer array 	GradientTable2DY
+//	real			NoiseGetRandomIntEvent
+//	integer			NoiseGetRandomIntLow
+//	integer			NoiseGetRandomIntHigh
+//	integer			NoiseGetRandomIntReturn
 //
 //  Requires Bitwise by d07.RiV, to make this library work properly
 //  https://www.hiveworkshop.com/threads/snippet-bitwise.331760/
