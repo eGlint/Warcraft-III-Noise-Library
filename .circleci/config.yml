@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - checkout
-      - run: git checkout wc3-pre-1.29
+      - run: git checkout origin/wc3-pre-v1.29
 
       - run:
           name: Moving JASS files to root directory
